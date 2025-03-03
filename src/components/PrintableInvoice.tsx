@@ -200,8 +200,8 @@ const PrintableInvoice: React.FC<PrintableInvoiceProps | BarcodeScannerInvoicePr
   // Determine the onClose function based on props
   const onClose = isInvoiceTypeProps(props) ? props.onClose : () => {};
 
-  // Use currency from props or default to ₹
-  const currencySymbol = isBarcodeScannerProps(props) ? props.currency : "₹";
+  // Always use rupee symbol, ignore currency prop from barcode scanner
+  const currencySymbol = "₹";
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">

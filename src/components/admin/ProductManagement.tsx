@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { 
   Card, 
@@ -282,7 +281,7 @@ const ProductManagement: React.FC = () => {
                 </div>
                 <div className="grid grid-cols-3 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="price">Price ($) *</Label>
+                    <Label htmlFor="price">Price (₹) *</Label>
                     <Input 
                       id="price" 
                       name="price" 
@@ -345,7 +344,7 @@ const ProductManagement: React.FC = () => {
                     <TableCell>
                       <Badge variant="outline">{product.category}</Badge>
                     </TableCell>
-                    <TableCell>${product.price.toFixed(2)}</TableCell>
+                    <TableCell>₹{product.price.toFixed(2)}</TableCell>
                     <TableCell>
                       <Badge variant={product.stock > 10 ? "default" : (product.stock > 0 ? "secondary" : "destructive")}>
                         {product.stock} {product.stock === 1 ? 'item' : 'items'}
@@ -437,7 +436,7 @@ const ProductManagement: React.FC = () => {
             </div>
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="edit-price">Price ($) *</Label>
+                <Label htmlFor="edit-price">Price (₹) *</Label>
                 <Input 
                   id="edit-price" 
                   name="price" 
@@ -473,6 +472,87 @@ const ProductManagement: React.FC = () => {
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
             <Button onClick={handleEditProduct}>Update Product</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Product Dialog - Update the Price label */}
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Add New Product</DialogTitle>
+            <DialogDescription>
+              Fill out the form below to add a new product to inventory.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Product Name *</Label>
+                <Input 
+                  id="name" 
+                  name="name" 
+                  value={formData.name} 
+                  onChange={handleInputChange} 
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="sku">SKU *</Label>
+                <Input 
+                  id="sku" 
+                  name="sku" 
+                  value={formData.sku} 
+                  onChange={handleInputChange} 
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Input 
+                id="description" 
+                name="description" 
+                value={formData.description} 
+                onChange={handleInputChange} 
+              />
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="price">Price (₹) *</Label>
+                <Input 
+                  id="price" 
+                  name="price" 
+                  type="number" 
+                  min="0" 
+                  step="0.01" 
+                  value={formData.price} 
+                  onChange={handleInputChange} 
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="category">Category</Label>
+                <Input 
+                  id="category" 
+                  name="category" 
+                  value={formData.category} 
+                  onChange={handleInputChange} 
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="stock">Stock</Label>
+                <Input 
+                  id="stock" 
+                  name="stock" 
+                  type="number" 
+                  min="0" 
+                  value={formData.stock} 
+                  onChange={handleInputChange} 
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleAddProduct}>Save Product</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
