@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import MainLayout from "@/layouts/MainLayout";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -171,7 +170,7 @@ export default function AdminPanel() {
                               </Badge>
                             </TableCell>
                             <TableCell>
-                              <Badge variant={user.status === "active" ? "success" : "secondary"}>
+                              <Badge variant={user.status === "active" ? "default" : "secondary"}>
                                 {user.status}
                               </Badge>
                             </TableCell>

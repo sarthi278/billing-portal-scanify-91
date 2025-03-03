@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import MainLayout from "@/layouts/MainLayout";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -166,7 +165,7 @@ const InvoicesTab: React.FC<TabContentProps> = ({ searchQuery, setSearchQuery })
                     <TableCell>{invoice.items}</TableCell>
                     <TableCell>
                       <Badge variant={
-                        invoice.status === "Paid" ? "success" : 
+                        invoice.status === "Paid" ? "default" : 
                         invoice.status === "Pending" ? "outline" : 
                         "destructive"
                       }>
