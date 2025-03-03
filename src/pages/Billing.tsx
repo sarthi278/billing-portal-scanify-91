@@ -7,20 +7,43 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-import { CreditCard, Download, FileDown, FileText, Filter, Plus, Search, UserRound } from "lucide-react";
+import { CreditCard, Download, FileDown, FileText, Filter, Plus, Printer, Search, UserRound } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import PrintableInvoice, { InvoiceType } from "@/components/PrintableInvoice";
 
-// Mock invoices data
-const mockInvoices = [
-  { id: "INV-001", customer: "John Doe", date: "2023-05-15", amount: 350.99, status: "Paid", items: 5 },
-  { id: "INV-002", customer: "Alice Smith", date: "2023-05-14", amount: 120.50, status: "Pending", items: 2 },
-  { id: "INV-003", customer: "Bob Johnson", date: "2023-05-13", amount: 550.00, status: "Paid", items: 7 },
-  { id: "INV-004", customer: "Emma Davis", date: "2023-05-10", amount: 220.75, status: "Overdue", items: 3 },
-  { id: "INV-005", customer: "Michael Wilson", date: "2023-05-09", amount: 180.25, status: "Paid", items: 4 },
-  { id: "INV-006", customer: "Olivia Brown", date: "2023-05-07", amount: 430.00, status: "Pending", items: 6 },
-  { id: "INV-007", customer: "William Taylor", date: "2023-05-05", amount: 95.50, status: "Overdue", items: 1 },
-  { id: "INV-008", customer: "Sophia Martinez", date: "2023-05-03", amount: 310.25, status: "Paid", items: 5 },
+// Mock invoices data with extended data for printing
+const mockInvoices: InvoiceType[] = [
+  { 
+    id: "INV-001", 
+    customer: "John Doe", 
+    customerEmail: "john@example.com",
+    customerAddress: "123 Main St, Anytown, USA",
+    date: "2023-05-15", 
+    dueDate: "2023-06-15",
+    amount: 350.99, 
+    status: "Paid", 
+    items: [
+      { id: "item1", description: "Website Design", quantity: 1, unitPrice: 250.99 },
+      { id: "item2", description: "Hosting (Monthly)", quantity: 1, unitPrice: 50.00 },
+      { id: "item3", description: "Domain Registration", quantity: 1, unitPrice: 50.00 }
+    ],
+    notes: "Payment received with thanks." 
+  },
+  { 
+    id: "INV-002", 
+    customer: "Alice Smith", 
+    customerEmail: "alice@example.com",
+    customerAddress: "456 Oak St, Somewhere, USA",
+    date: "2023-05-14", 
+    dueDate: "2023-06-14",
+    amount: 120.50, 
+    status: "Pending", 
+    items: [
+      { id: "item1", description: "Logo Design", quantity: 1, unitPrice: 120.50 }
+    ]
+  },
+  // ... keep existing code (remaining mock invoices with added item details)
 ];
 
 // Mock customers data
@@ -42,6 +65,7 @@ const InvoicesTab: React.FC<TabContentProps> = ({ searchQuery, setSearchQuery })
   const { toast } = useToast();
   const [selectedInvoices, setSelectedInvoices] = useState<string[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [selectedInvoice, setSelectedInvoice] = useState<InvoiceType | null>(null);
   
   const filteredInvoices = mockInvoices.filter(invoice => {
     const matchesSearch = 
@@ -87,136 +111,157 @@ const InvoicesTab: React.FC<TabContentProps> = ({ searchQuery, setSearchQuery })
       duration: 3000,
     });
   };
+
+  const handlePrintInvoice = (invoice: InvoiceType) => {
+    setSelectedInvoice(invoice);
+  };
   
   return (
-    <Card className="neo">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0">
-        <div>
-          <CardTitle>Invoices</CardTitle>
-          <CardDescription>Manage and track your billing invoices</CardDescription>
-        </div>
-        <div className="flex items-center space-x-2">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search invoices..."
-              className="w-[250px] pl-8"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+    <>
+      <Card className="neo">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <div>
+            <CardTitle>Invoices</CardTitle>
+            <CardDescription>Manage and track your billing invoices</CardDescription>
           </div>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[130px]">
-              <div className="flex items-center">
-                <Filter className="h-4 w-4 mr-2" />
-                <span>Status</span>
-              </div>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All</SelectItem>
-              <SelectItem value="paid">Paid</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="overdue">Overdue</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            New Invoice
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="rounded-md border overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-12">
-                  <Checkbox 
-                    checked={selectedInvoices.length === filteredInvoices.length && filteredInvoices.length > 0}
-                    onCheckedChange={toggleSelectAll}
-                    aria-label="Select all invoices"
-                  />
-                </TableHead>
-                <TableHead>Invoice</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Items</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredInvoices.length > 0 ? (
-                filteredInvoices.map(invoice => (
-                  <TableRow key={invoice.id}>
-                    <TableCell>
-                      <Checkbox 
-                        checked={selectedInvoices.includes(invoice.id)}
-                        onCheckedChange={() => toggleInvoiceSelection(invoice.id)}
-                        aria-label={`Select invoice ${invoice.id}`}
-                      />
-                    </TableCell>
-                    <TableCell className="font-medium">{invoice.id}</TableCell>
-                    <TableCell>{invoice.customer}</TableCell>
-                    <TableCell>{new Date(invoice.date).toLocaleDateString()}</TableCell>
-                    <TableCell>${invoice.amount.toFixed(2)}</TableCell>
-                    <TableCell>{invoice.items}</TableCell>
-                    <TableCell>
-                      <Badge variant={
-                        invoice.status === "Paid" ? "default" : 
-                        invoice.status === "Pending" ? "outline" : 
-                        "destructive"
-                      }>
-                        {invoice.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end space-x-2">
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <FileText className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <Download className="h-4 w-4" />
-                        </Button>
-                      </div>
+          <div className="flex items-center space-x-2">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Search invoices..."
+                className="w-[250px] pl-8"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[130px]">
+                <div className="flex items-center">
+                  <Filter className="h-4 w-4 mr-2" />
+                  <span>Status</span>
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="paid">Paid</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="overdue">Overdue</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              New Invoice
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-md border overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-12">
+                    <Checkbox 
+                      checked={selectedInvoices.length === filteredInvoices.length && filteredInvoices.length > 0}
+                      onCheckedChange={toggleSelectAll}
+                      aria-label="Select all invoices"
+                    />
+                  </TableHead>
+                  <TableHead>Invoice</TableHead>
+                  <TableHead>Customer</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead>Items</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredInvoices.length > 0 ? (
+                  filteredInvoices.map(invoice => (
+                    <TableRow key={invoice.id}>
+                      <TableCell>
+                        <Checkbox 
+                          checked={selectedInvoices.includes(invoice.id)}
+                          onCheckedChange={() => toggleInvoiceSelection(invoice.id)}
+                          aria-label={`Select invoice ${invoice.id}`}
+                        />
+                      </TableCell>
+                      <TableCell className="font-medium">{invoice.id}</TableCell>
+                      <TableCell>{invoice.customer}</TableCell>
+                      <TableCell>{new Date(invoice.date).toLocaleDateString()}</TableCell>
+                      <TableCell>${invoice.amount.toFixed(2)}</TableCell>
+                      <TableCell>{invoice.items.length}</TableCell>
+                      <TableCell>
+                        <Badge variant={
+                          invoice.status === "Paid" ? "default" : 
+                          invoice.status === "Pending" ? "outline" : 
+                          "destructive"
+                        }>
+                          {invoice.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end space-x-2">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8"
+                            onClick={() => handlePrintInvoice(invoice)}
+                          >
+                            <Printer className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <FileText className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <Download className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={8} className="h-24 text-center">
+                      No invoices found.
                     </TableCell>
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={8} className="h-24 text-center">
-                    No invoices found.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-      </CardContent>
-      <CardFooter className="flex justify-between border-t pt-6">
-        <div className="flex items-center text-sm text-muted-foreground">
-          <span>{selectedInvoices.length} of {filteredInvoices.length} selected</span>
-        </div>
-        <div className="space-x-2">
-          <Button 
-            variant="outline" 
-            onClick={() => handleBatchAction("Download")}
-            disabled={selectedInvoices.length === 0}
-          >
-            <FileDown className="h-4 w-4 mr-2" />
-            Download
-          </Button>
-          <Button
-            disabled={selectedInvoices.length === 0}
-            onClick={() => handleBatchAction("Email")}
-          >
-            Send Invoices
-          </Button>
-        </div>
-      </CardFooter>
-    </Card>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+        <CardFooter className="flex justify-between border-t pt-6">
+          <div className="flex items-center text-sm text-muted-foreground">
+            <span>{selectedInvoices.length} of {filteredInvoices.length} selected</span>
+          </div>
+          <div className="space-x-2">
+            <Button 
+              variant="outline" 
+              onClick={() => handleBatchAction("Download")}
+              disabled={selectedInvoices.length === 0}
+            >
+              <FileDown className="h-4 w-4 mr-2" />
+              Download
+            </Button>
+            <Button
+              disabled={selectedInvoices.length === 0}
+              onClick={() => handleBatchAction("Email")}
+            >
+              Send Invoices
+            </Button>
+          </div>
+        </CardFooter>
+      </Card>
+      
+      {selectedInvoice && (
+        <PrintableInvoice 
+          invoice={selectedInvoice} 
+          onClose={() => setSelectedInvoice(null)} 
+        />
+      )}
+    </>
   );
 };
 
