@@ -28,8 +28,57 @@ interface PrintableInvoiceProps {
   onClose: () => void;
 }
 
-const PrintableInvoice: React.FC<PrintableInvoiceProps> = ({ invoice, onClose }) => {
+// Add a second interface for the BarcodeScanner usage
+export interface BarcodeScannerInvoiceProps {
+  invoiceNumber: string;
+  invoiceDate: string;
+  items: any[];
+  subtotal: number;
+  tax: number;
+  total: number;
+  currency: string;
+}
+
+const PrintableInvoice: React.FC<PrintableInvoiceProps | BarcodeScannerInvoiceProps> = (props) => {
   const printRef = useRef<HTMLDivElement>(null);
+
+  // Type guard to determine which props interface we're using
+  const isInvoiceTypeProps = (p: any): p is PrintableInvoiceProps => {
+    return p.invoice !== undefined;
+  };
+
+  const isBarcodeScannerProps = (p: any): p is BarcodeScannerInvoiceProps => {
+    return p.invoiceNumber !== undefined;
+  };
+
+  let invoice: InvoiceType;
+  
+  if (isInvoiceTypeProps(props)) {
+    invoice = props.invoice;
+  } else if (isBarcodeScannerProps(props)) {
+    // Convert BarcodeScannerInvoiceProps to InvoiceType format
+    invoice = {
+      id: props.invoiceNumber,
+      customer: "Customer",
+      date: props.invoiceDate,
+      items: props.items.map(item => ({
+        id: item.barcode || item.id,
+        description: item.name,
+        quantity: item.quantity,
+        unitPrice: item.price
+      })),
+      status: "Pending"
+    };
+  } else {
+    // Fallback for TypeScript
+    invoice = {
+      id: "",
+      customer: "",
+      date: "",
+      items: [],
+      status: ""
+    };
+  }
 
   const calculateSubtotal = () => {
     return invoice.items.reduce((total, item) => total + (item.quantity * item.unitPrice), 0);
@@ -148,6 +197,12 @@ const PrintableInvoice: React.FC<PrintableInvoiceProps> = ({ invoice, onClose })
     }
   };
 
+  // Determine the onClose function based on props
+  const onClose = isInvoiceTypeProps(props) ? props.onClose : () => {};
+
+  // Use currency from props or default to ₹
+  const currencySymbol = isBarcodeScannerProps(props) ? props.currency : "₹";
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <Card className="w-full max-w-5xl h-[90vh] overflow-auto bg-white">
@@ -235,9 +290,9 @@ const PrintableInvoice: React.FC<PrintableInvoiceProps> = ({ invoice, onClose })
                     <div className="font-medium">{item.description}</div>
                   </td>
                   <td className="py-3 border-t border-gray-100">{item.quantity}</td>
-                  <td className="py-3 border-t border-gray-100">${item.unitPrice.toFixed(2)}</td>
+                  <td className="py-3 border-t border-gray-100">{currencySymbol}{item.unitPrice.toFixed(2)}</td>
                   <td className="py-3 border-t border-gray-100 text-right">
-                    ${(item.quantity * item.unitPrice).toFixed(2)}
+                    {currencySymbol}{(item.quantity * item.unitPrice).toFixed(2)}
                   </td>
                 </tr>
               ))}
@@ -248,15 +303,15 @@ const PrintableInvoice: React.FC<PrintableInvoiceProps> = ({ invoice, onClose })
             <div className="w-72">
               <div className="flex justify-between py-2">
                 <span className="text-gray-600">Subtotal:</span>
-                <span>${calculateSubtotal().toFixed(2)}</span>
+                <span>{currencySymbol}{calculateSubtotal().toFixed(2)}</span>
               </div>
               <div className="flex justify-between py-2">
                 <span className="text-gray-600">Tax (10%):</span>
-                <span>${calculateTax().toFixed(2)}</span>
+                <span>{currencySymbol}{calculateTax().toFixed(2)}</span>
               </div>
               <div className="flex justify-between py-3 font-bold border-t border-gray-200 mt-2">
                 <span>Total:</span>
-                <span>${calculateTotal().toFixed(2)}</span>
+                <span>{currencySymbol}{calculateTotal().toFixed(2)}</span>
               </div>
             </div>
           </div>

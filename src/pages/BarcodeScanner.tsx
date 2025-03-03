@@ -10,7 +10,6 @@ import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import PrintableInvoice from "@/components/PrintableInvoice";
 
-// Mock product database
 const productDatabase = [
   { barcode: "1234567890", name: "Product A", price: 19.99, sku: "SKU-001", category: "Electronics" },
   { barcode: "2345678901", name: "Product B", price: 29.99, sku: "SKU-002", category: "Clothing" },
@@ -42,7 +41,6 @@ export default function BarcodeScanner() {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Update total amount when scanned products change
   useEffect(() => {
     const newTotal = scannedProducts.reduce((sum, product) => {
       return sum + (product.price * product.quantity);
@@ -50,7 +48,6 @@ export default function BarcodeScanner() {
     setTotalAmount(newTotal);
   }, [scannedProducts]);
 
-  // Simulate barcode scanning (in real app this would use a barcode scanning library)
   const startScanning = async () => {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       setIsCameraAvailable(false);
@@ -71,13 +68,11 @@ export default function BarcodeScanner() {
         videoRef.current.srcObject = stream;
         setIsScanning(true);
         
-        // Simulate barcode detection after 2 seconds
         setTimeout(() => {
           const randomIndex = Math.floor(Math.random() * productDatabase.length);
           const detectedProduct = productDatabase[randomIndex];
           handleProductScanned(detectedProduct.barcode);
           
-          // Stop the camera after scanning
           stopScanning();
         }, 2000);
       }
@@ -105,16 +100,13 @@ export default function BarcodeScanner() {
     const foundProduct = productDatabase.find(product => product.barcode === barcode);
     
     if (foundProduct) {
-      // Check if product is already in the list
       const existingProductIndex = scannedProducts.findIndex(p => p.barcode === barcode);
       
       if (existingProductIndex >= 0) {
-        // Increment quantity if product already exists
         const updatedProducts = [...scannedProducts];
         updatedProducts[existingProductIndex].quantity += 1;
         setScannedProducts(updatedProducts);
       } else {
-        // Add new product
         setScannedProducts([
           ...scannedProducts,
           { ...foundProduct, quantity: 1 }
@@ -176,11 +168,9 @@ export default function BarcodeScanner() {
       return;
     }
     
-    // Generate invoice number and date
     const invoiceNumber = `INV-${Math.floor(100000 + Math.random() * 900000)}`;
     const invoiceDate = new Date().toLocaleDateString('en-IN');
     
-    // Prepare the invoice data
     const invoiceData = {
       invoiceNumber,
       invoiceDate,
@@ -200,7 +190,6 @@ export default function BarcodeScanner() {
       duration: 3000,
     });
     
-    // Clear the list after invoice is generated
     setScannedProducts([]);
   };
 
@@ -214,14 +203,12 @@ export default function BarcodeScanner() {
       return;
     }
     
-    // Process payment (this would integrate with a payment gateway in a real app)
     toast({
       title: "Payment processed",
       description: "Payment completed successfully. Generating invoice...",
       duration: 3000,
     });
     
-    // Generate invoice after successful payment
     generateInvoice();
   };
 
@@ -257,41 +244,16 @@ export default function BarcodeScanner() {
         </div>
 
         {showInvoice && invoiceData ? (
-          <div className="space-y-4">
-            <Card className="neo">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle>Invoice Generated</CardTitle>
-                  <CardDescription>Invoice #{invoiceData.invoiceNumber}</CardDescription>
-                </div>
-                <div className="flex space-x-2">
-                  <Button variant="outline" onClick={closeInvoice}>
-                    Close
-                  </Button>
-                  <Button variant="print" onClick={printInvoice}>
-                    <Printer className="h-4 w-4 mr-2" />
-                    Print Invoice
-                  </Button>
-                  <Button onClick={goToBilling}>
-                    View All Invoices
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div ref={printableInvoiceRef}>
-                  <PrintableInvoice 
-                    invoiceNumber={invoiceData.invoiceNumber}
-                    invoiceDate={invoiceData.invoiceDate}
-                    items={invoiceData.items}
-                    subtotal={invoiceData.subtotal}
-                    tax={invoiceData.tax}
-                    total={invoiceData.total}
-                    currency="₹"
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          <PrintableInvoice 
+            invoiceNumber={invoiceData.invoiceNumber}
+            invoiceDate={invoiceData.invoiceDate}
+            items={invoiceData.items}
+            subtotal={invoiceData.subtotal}
+            tax={invoiceData.tax}
+            total={invoiceData.total}
+            currency="₹"
+            onClose={closeInvoice}
+          />
         ) : (
           <div className="grid gap-6 md:grid-cols-3">
             <div className="md:col-span-2 space-y-6">
