@@ -11,8 +11,9 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useAuth } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Pencil, Plus, Search, Settings, Trash, User, Users } from "lucide-react";
+import { Pencil, Plus, Search, Settings, Trash, User, Users, Package } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import ProductManagement from "@/components/admin/ProductManagement";
 
 // Mock user data
 const mockUsers = [
@@ -99,15 +100,19 @@ export default function AdminPanel() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight mb-2">Admin Panel</h1>
           <p className="text-muted-foreground">
-            Manage users, system settings, and administrative functions.
+            Manage users, products, system settings, and administrative functions.
           </p>
         </div>
 
         <Tabs defaultValue="users" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 max-w-md">
+          <TabsList className="grid w-full grid-cols-3 max-w-md">
             <TabsTrigger value="users" className="flex items-center">
               <Users className="h-4 w-4 mr-2" />
               User Management
+            </TabsTrigger>
+            <TabsTrigger value="products" className="flex items-center">
+              <Package className="h-4 w-4 mr-2" />
+              Products
             </TabsTrigger>
             <TabsTrigger value="settings" className="flex items-center">
               <Settings className="h-4 w-4 mr-2" />
@@ -234,6 +239,10 @@ export default function AdminPanel() {
                 </div>
               </CardFooter>
             </Card>
+          </TabsContent>
+          
+          <TabsContent value="products">
+            <ProductManagement />
           </TabsContent>
           
           <TabsContent value="settings">

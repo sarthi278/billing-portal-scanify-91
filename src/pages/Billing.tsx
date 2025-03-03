@@ -4,399 +4,281 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
-import { CreditCard, Download, FileDown, FileText, Filter, Plus, Printer, Search, UserRound } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { useAuth } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
-import PrintableInvoice, { InvoiceType } from "@/components/PrintableInvoice";
+import { Switch } from "@/components/ui/switch";
+import { Pencil, Plus, Search, Settings, Trash, User, Users } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-// Mock invoices data with extended data for printing
-const mockInvoices: InvoiceType[] = [
-  { 
-    id: "INV-001", 
-    customer: "John Doe", 
-    customerEmail: "john@example.com",
-    customerAddress: "123 Main St, Anytown, USA",
-    date: "2023-05-15", 
-    dueDate: "2023-06-15",
-    amount: 350.99, 
-    status: "Paid", 
-    items: [
-      { id: "item1", description: "Website Design", quantity: 1, unitPrice: 250.99 },
-      { id: "item2", description: "Hosting (Monthly)", quantity: 1, unitPrice: 50.00 },
-      { id: "item3", description: "Domain Registration", quantity: 1, unitPrice: 50.00 }
-    ],
-    notes: "Payment received with thanks." 
-  },
-  { 
-    id: "INV-002", 
-    customer: "Alice Smith", 
-    customerEmail: "alice@example.com",
-    customerAddress: "456 Oak St, Somewhere, USA",
-    date: "2023-05-14", 
-    dueDate: "2023-06-14",
-    amount: 120.50, 
-    status: "Pending", 
-    items: [
-      { id: "item1", description: "Logo Design", quantity: 1, unitPrice: 120.50 }
-    ]
-  },
-  // ... keep existing code (remaining mock invoices with added item details)
+// Mock user data
+const mockUsers = [
+  { id: "1", name: "Admin User", email: "admin@scanify.com", role: "admin", status: "active", lastLogin: "Today, 10:30 AM" },
+  { id: "2", name: "Regular User", email: "user@scanify.com", role: "user", status: "active", lastLogin: "Yesterday, 2:15 PM" },
+  { id: "3", name: "John Smith", email: "john@example.com", role: "user", status: "inactive", lastLogin: "1 week ago" },
+  { id: "4", name: "Sarah Johnson", email: "sarah@example.com", role: "user", status: "active", lastLogin: "Yesterday, 9:45 AM" },
+  { id: "5", name: "Robert Davis", email: "robert@example.com", role: "user", status: "active", lastLogin: "3 days ago" },
 ];
 
-// Mock customers data
-const mockCustomers = [
-  { id: "1", name: "John Doe", email: "john@example.com", phone: "555-123-4567", invoices: 12, total: 1250.50 },
-  { id: "2", name: "Alice Smith", email: "alice@example.com", phone: "555-987-6543", invoices: 8, total: 950.75 },
-  { id: "3", name: "Bob Johnson", email: "bob@example.com", phone: "555-456-7890", invoices: 15, total: 1875.25 },
-  { id: "4", name: "Emma Davis", email: "emma@example.com", phone: "555-789-0123", invoices: 5, total: 620.00 },
-  { id: "5", name: "Michael Wilson", email: "michael@example.com", phone: "555-234-5678", invoices: 10, total: 1100.00 },
+// Mock system settings
+const mockSettings = [
+  { id: "1", name: "Enable Email Notifications", value: true, category: "Notifications" },
+  { id: "2", name: "Two-Factor Authentication", value: false, category: "Security" },
+  { id: "3", name: "Auto-generate Invoices", value: true, category: "Billing" },
+  { id: "4", name: "Dark Mode Default", value: false, category: "Appearance" },
+  { id: "5", name: "Data Backup", value: true, category: "System" },
+  { id: "6", name: "User Activity Logging", value: true, category: "Security" },
+  { id: "7", name: "Email Reports", value: false, category: "Reporting" },
 ];
 
-// Tabs interface
-interface TabContentProps {
-  searchQuery: string;
-  setSearchQuery: React.Dispatch<React.SetStateAction<string>>;
-}
-
-const InvoicesTab: React.FC<TabContentProps> = ({ searchQuery, setSearchQuery }) => {
+export default function AdminPanel() {
+  const { isAdmin } = useAuth();
+  const navigate = useNavigate();
   const { toast } = useToast();
-  const [selectedInvoices, setSelectedInvoices] = useState<string[]>([]);
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [selectedInvoice, setSelectedInvoice] = useState<InvoiceType | null>(null);
-  
-  const filteredInvoices = mockInvoices.filter(invoice => {
-    const matchesSearch = 
-      invoice.id.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      invoice.customer.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesStatus = 
-      statusFilter === "all" || 
-      invoice.status.toLowerCase() === statusFilter.toLowerCase();
-    
-    return matchesSearch && matchesStatus;
-  });
-  
-  const toggleSelectAll = () => {
-    if (selectedInvoices.length === filteredInvoices.length) {
-      setSelectedInvoices([]);
-    } else {
-      setSelectedInvoices(filteredInvoices.map(invoice => invoice.id));
-    }
-  };
-  
-  const toggleInvoiceSelection = (invoiceId: string) => {
-    if (selectedInvoices.includes(invoiceId)) {
-      setSelectedInvoices(selectedInvoices.filter(id => id !== invoiceId));
-    } else {
-      setSelectedInvoices([...selectedInvoices, invoiceId]);
-    }
-  };
-  
-  const handleBatchAction = (action: string) => {
-    if (selectedInvoices.length === 0) {
+  const [users, setUsers] = useState(mockUsers);
+  const [settings, setSettings] = useState(mockSettings);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [userToDelete, setUserToDelete] = useState<string | null>(null);
+
+  // Redirect non-admin users
+  React.useEffect(() => {
+    if (!isAdmin) {
       toast({
-        title: "No invoices selected",
-        description: "Please select at least one invoice to perform this action.",
+        title: "Access denied",
+        description: "You don't have permission to access the admin panel.",
         variant: "destructive",
+        duration: 5000,
       });
-      return;
+      navigate("/dashboard");
     }
+  }, [isAdmin, navigate, toast]);
+
+  const filteredUsers = users.filter(user => 
+    user.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    user.email.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleSettingChange = (id: string, newValue: boolean) => {
+    const updatedSettings = settings.map(setting => 
+      setting.id === id ? { ...setting, value: newValue } : setting
+    );
+    setSettings(updatedSettings);
+    
+    // Find the setting name for the toast
+    const settingName = settings.find(s => s.id === id)?.name;
     
     toast({
-      title: "Batch action initiated",
-      description: `${action} action on ${selectedInvoices.length} selected invoices.`,
+      title: `Setting updated`,
+      description: `${settingName} has been ${newValue ? 'enabled' : 'disabled'}.`,
       duration: 3000,
     });
   };
 
-  const handlePrintInvoice = (invoice: InvoiceType) => {
-    setSelectedInvoice(invoice);
+  const deleteUser = (userId: string) => {
+    const updatedUsers = users.filter(user => user.id !== userId);
+    setUsers(updatedUsers);
+    setUserToDelete(null);
+    
+    toast({
+      title: "User deleted",
+      description: "The user has been removed from the system.",
+      duration: 3000,
+    });
   };
-  
-  return (
-    <>
-      <Card className="neo">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0">
-          <div>
-            <CardTitle>Invoices</CardTitle>
-            <CardDescription>Manage and track your billing invoices</CardDescription>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search invoices..."
-                className="w-[250px] pl-8"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[130px]">
-                <div className="flex items-center">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <span>Status</span>
-                </div>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                <SelectItem value="paid">Paid</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="overdue">Overdue</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              New Invoice
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-md border overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-12">
-                    <Checkbox 
-                      checked={selectedInvoices.length === filteredInvoices.length && filteredInvoices.length > 0}
-                      onCheckedChange={toggleSelectAll}
-                      aria-label="Select all invoices"
-                    />
-                  </TableHead>
-                  <TableHead>Invoice</TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Items</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredInvoices.length > 0 ? (
-                  filteredInvoices.map(invoice => (
-                    <TableRow key={invoice.id}>
-                      <TableCell>
-                        <Checkbox 
-                          checked={selectedInvoices.includes(invoice.id)}
-                          onCheckedChange={() => toggleInvoiceSelection(invoice.id)}
-                          aria-label={`Select invoice ${invoice.id}`}
-                        />
-                      </TableCell>
-                      <TableCell className="font-medium">{invoice.id}</TableCell>
-                      <TableCell>{invoice.customer}</TableCell>
-                      <TableCell>{new Date(invoice.date).toLocaleDateString()}</TableCell>
-                      <TableCell>${invoice.amount.toFixed(2)}</TableCell>
-                      <TableCell>{invoice.items.length}</TableCell>
-                      <TableCell>
-                        <Badge variant={
-                          invoice.status === "Paid" ? "default" : 
-                          invoice.status === "Pending" ? "outline" : 
-                          "destructive"
-                        }>
-                          {invoice.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end space-x-2">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8"
-                            onClick={() => handlePrintInvoice(invoice)}
-                          >
-                            <Printer className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <FileText className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <Download className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={8} className="h-24 text-center">
-                      No invoices found.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-        <CardFooter className="flex justify-between border-t pt-6">
-          <div className="flex items-center text-sm text-muted-foreground">
-            <span>{selectedInvoices.length} of {filteredInvoices.length} selected</span>
-          </div>
-          <div className="space-x-2">
-            <Button 
-              variant="outline" 
-              onClick={() => handleBatchAction("Download")}
-              disabled={selectedInvoices.length === 0}
-            >
-              <FileDown className="h-4 w-4 mr-2" />
-              Download
-            </Button>
-            <Button
-              disabled={selectedInvoices.length === 0}
-              onClick={() => handleBatchAction("Email")}
-            >
-              Send Invoices
-            </Button>
-          </div>
-        </CardFooter>
-      </Card>
-      
-      {selectedInvoice && (
-        <PrintableInvoice 
-          invoice={selectedInvoice} 
-          onClose={() => setSelectedInvoice(null)} 
-        />
-      )}
-    </>
-  );
-};
 
-const CustomersTab: React.FC<TabContentProps> = ({ searchQuery, setSearchQuery }) => {
-  const filteredCustomers = mockCustomers.filter(customer => 
-    customer.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    customer.email.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-  
-  return (
-    <Card className="neo">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0">
-        <div>
-          <CardTitle>Customers</CardTitle>
-          <CardDescription>Manage your customer information</CardDescription>
-        </div>
-        <div className="flex items-center space-x-2">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search customers..."
-              className="w-[250px] pl-8"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-          <Button>
-            <UserRound className="h-4 w-4 mr-2" />
-            Add Customer
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="rounded-md border overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Phone</TableHead>
-                <TableHead>Invoices</TableHead>
-                <TableHead>Total Spent</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredCustomers.length > 0 ? (
-                filteredCustomers.map(customer => (
-                  <TableRow key={customer.id}>
-                    <TableCell className="font-medium">{customer.name}</TableCell>
-                    <TableCell>{customer.email}</TableCell>
-                    <TableCell>{customer.phone}</TableCell>
-                    <TableCell>{customer.invoices}</TableCell>
-                    <TableCell>${customer.total.toFixed(2)}</TableCell>
-                    <TableCell className="text-right">
-                      <Button variant="outline" size="sm">
-                        View Invoices
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center">
-                    No customers found.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-      </CardContent>
-      <CardFooter className="flex justify-between border-t pt-6">
-        <div className="text-sm text-muted-foreground">
-          Showing {filteredCustomers.length} of {mockCustomers.length} customers
-        </div>
-        <Button variant="outline">Export Customers</Button>
-      </CardFooter>
-    </Card>
-  );
-};
+  if (!isAdmin) {
+    return null; // Prevent rendering if not admin
+  }
 
-export default function Billing() {
-  const [searchQuery, setSearchQuery] = useState("");
-  
   return (
     <MainLayout>
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight mb-2">Billing</h1>
+          <h1 className="text-3xl font-bold tracking-tight mb-2">Admin Panel</h1>
           <p className="text-muted-foreground">
-            Manage invoices, payments, and customer billing information.
+            Manage users, system settings, and administrative functions.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[
-            { title: "Unpaid Invoices", value: "$2,504.00", description: "3 invoices pending" },
-            { title: "Overdue Invoices", value: "$650.75", description: "2 invoices overdue" },
-            { title: "Paid this Month", value: "$4,750.50", description: "+12% from last month" },
-            { title: "Total Revenue", value: "$125,430.90", description: "All time" },
-          ].map((stat, index) => (
-            <Card key={index} className="neo">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  {stat.title}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stat.value}</div>
-                <p className="text-xs text-muted-foreground mt-1">{stat.description}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        <Tabs defaultValue="invoices" className="space-y-6">
+        <Tabs defaultValue="users" className="space-y-6">
           <TabsList className="grid w-full grid-cols-2 max-w-md">
-            <TabsTrigger value="invoices" className="flex items-center">
-              <FileText className="h-4 w-4 mr-2" />
-              Invoices
+            <TabsTrigger value="users" className="flex items-center">
+              <Users className="h-4 w-4 mr-2" />
+              User Management
             </TabsTrigger>
-            <TabsTrigger value="customers" className="flex items-center">
-              <UserRound className="h-4 w-4 mr-2" />
-              Customers
+            <TabsTrigger value="settings" className="flex items-center">
+              <Settings className="h-4 w-4 mr-2" />
+              System Settings
             </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="invoices">
-            <InvoicesTab searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+          <TabsContent value="users">
+            <Card className="neo">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                <div>
+                  <CardTitle>User Management</CardTitle>
+                  <CardDescription>Manage user accounts and permissions</CardDescription>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="relative">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      type="search"
+                      placeholder="Search users..."
+                      className="w-[250px] pl-8"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                  </div>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add User
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="rounded-md border overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-10"></TableHead>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Role</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Last Login</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredUsers.length > 0 ? (
+                        filteredUsers.map(user => (
+                          <TableRow key={user.id}>
+                            <TableCell>
+                              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                                <User className="h-4 w-4" />
+                              </div>
+                            </TableCell>
+                            <TableCell className="font-medium">{user.name}</TableCell>
+                            <TableCell>{user.email}</TableCell>
+                            <TableCell>
+                              <Badge variant={user.role === "admin" ? "default" : "outline"}>
+                                {user.role}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant={user.status === "active" ? "default" : "secondary"}>
+                                {user.status}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>{user.lastLogin}</TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex justify-end space-x-2">
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <AlertDialog open={userToDelete === user.id} onOpenChange={(open) => !open && setUserToDelete(null)}>
+                                  <AlertDialogTrigger asChild>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon" 
+                                      className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
+                                      onClick={() => setUserToDelete(user.id)}
+                                    >
+                                      <Trash className="h-4 w-4" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Delete User</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Are you sure you want to delete {user.name}? This action cannot be undone.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction
+                                        className="bg-red-500 hover:bg-red-600"
+                                        onClick={() => deleteUser(user.id)}
+                                      >
+                                        Delete
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={7} className="h-24 text-center">
+                            No users found.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+              <CardFooter className="flex justify-between border-t pt-6">
+                <div className="text-sm text-muted-foreground">
+                  Showing {filteredUsers.length} of {users.length} users
+                </div>
+                <div className="space-x-2">
+                  <Button variant="outline">Export Users</Button>
+                  <Button>Batch Actions</Button>
+                </div>
+              </CardFooter>
+            </Card>
           </TabsContent>
           
-          <TabsContent value="customers">
-            <CustomersTab searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+          <TabsContent value="settings">
+            <Card className="neo">
+              <CardHeader>
+                <CardTitle>System Settings</CardTitle>
+                <CardDescription>Configure global system settings and preferences</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  {["Security", "Billing", "Notifications", "Appearance", "System", "Reporting"].map(category => {
+                    const categorySettings = settings.filter(s => s.category === category);
+                    if (categorySettings.length === 0) return null;
+                    
+                    return (
+                      <div key={category}>
+                        <h3 className="text-lg font-medium mb-4">{category}</h3>
+                        <div className="space-y-4">
+                          {categorySettings.map(setting => (
+                            <div key={setting.id} className="flex items-center justify-between py-3 border-b last:border-b-0">
+                              <div>
+                                <Label htmlFor={`setting-${setting.id}`} className="text-base">
+                                  {setting.name}
+                                </Label>
+                                <p className="text-sm text-muted-foreground">
+                                  {setting.value ? "Enabled" : "Disabled"}
+                                </p>
+                              </div>
+                              <Switch
+                                id={`setting-${setting.id}`}
+                                checked={setting.value}
+                                onCheckedChange={(checked) => handleSettingChange(setting.id, checked)}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+              <CardFooter className="flex justify-end border-t pt-6">
+                <Button>Save All Settings</Button>
+              </CardFooter>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>

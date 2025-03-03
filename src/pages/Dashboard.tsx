@@ -1,4 +1,3 @@
-
 import React from "react";
 import MainLayout from "@/layouts/MainLayout";
 import { useAuth } from "@/contexts/AuthContext";
@@ -8,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { BarChart, DollarSign, Package, QrCode, ShoppingCart, Users } from "lucide-react";
 import { LineChart, Line, BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { cn } from "@/lib/utils";
+import ProductList from "@/components/ProductList";
 
 const data = [
   { name: "Jan", total: 1500 },
@@ -106,8 +106,9 @@ export default function Dashboard() {
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid grid-cols-2 w-[400px]">
+          <TabsList className="grid grid-cols-3 w-[600px]">
             <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="products">Products</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
           </TabsList>
           
@@ -221,6 +222,10 @@ export default function Dashboard() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+          
+          <TabsContent value="products" className="space-y-6">
+            <ProductList />
           </TabsContent>
           
           <TabsContent value="analytics" className="space-y-6">
