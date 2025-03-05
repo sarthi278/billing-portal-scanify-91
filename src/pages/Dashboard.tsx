@@ -1,3 +1,4 @@
+
 import React from "react";
 import MainLayout from "@/layouts/MainLayout";
 import { useAuth } from "@/contexts/AuthContext";
@@ -28,10 +29,10 @@ const productData = [
 ];
 
 const recentInvoices = [
-  { id: "#INV-001", customer: "John Doe", amount: 350.99, status: "Paid", date: "May 15, 2023" },
-  { id: "#INV-002", customer: "Alice Smith", amount: 120.50, status: "Pending", date: "May 14, 2023" },
-  { id: "#INV-003", customer: "Bob Johnson", amount: 550.00, status: "Paid", date: "May 13, 2023" },
-  { id: "#INV-004", customer: "Emma Davis", amount: 220.75, status: "Overdue", date: "May 10, 2023" },
+  { id: "#INV-001", customer: "John Doe", amount: 350.99, date: "May 15, 2023" },
+  { id: "#INV-002", customer: "Alice Smith", amount: 120.50, date: "May 14, 2023" },
+  { id: "#INV-003", customer: "Bob Johnson", amount: 550.00, date: "May 13, 2023" },
+  { id: "#INV-004", customer: "Emma Davis", amount: 220.75, date: "May 10, 2023" },
 ];
 
 export default function Dashboard() {
@@ -51,7 +52,7 @@ export default function Dashboard() {
           {[
             {
               title: "Total Revenue",
-              value: "$12,543.00",
+              value: "₹12,543.00",
               change: "+12.5%",
               icon: <DollarSign className="h-5 w-5 text-primary" />,
               description: "Revenue this month",
@@ -189,29 +190,18 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent>
                 <div className="rounded-md border">
-                  <div className="grid grid-cols-5 p-4 font-medium text-sm">
+                  <div className="grid grid-cols-4 p-4 font-medium text-sm">
                     <div>Invoice</div>
                     <div>Customer</div>
                     <div>Amount</div>
-                    <div>Status</div>
                     <div>Date</div>
                   </div>
                   <div className="divide-y">
                     {recentInvoices.map((invoice, index) => (
-                      <div key={index} className="grid grid-cols-5 p-4 text-sm items-center">
+                      <div key={index} className="grid grid-cols-4 p-4 text-sm items-center">
                         <div className="font-medium">{invoice.id}</div>
                         <div>{invoice.customer}</div>
-                        <div>${invoice.amount.toFixed(2)}</div>
-                        <div>
-                          <span className={cn(
-                            "rounded-full px-2 py-1 text-xs font-medium",
-                            invoice.status === "Paid" ? "bg-green-100 text-green-700" : 
-                            invoice.status === "Pending" ? "bg-yellow-100 text-yellow-700" : 
-                            "bg-red-100 text-red-700"
-                          )}>
-                            {invoice.status}
-                          </span>
-                        </div>
+                        <div>₹{invoice.amount.toFixed(2)}</div>
                         <div>{invoice.date}</div>
                       </div>
                     ))}

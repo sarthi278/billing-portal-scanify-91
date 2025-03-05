@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import MainLayout from "@/layouts/MainLayout";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,11 +9,13 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Pencil, Plus, Search, Settings, Trash, User, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // Mock user data
 const mockUsers = [
@@ -34,6 +37,14 @@ const mockSettings = [
   { id: "7", name: "Email Reports", value: false, category: "Reporting" },
 ];
 
+interface UserFormData {
+  id?: string;
+  name: string;
+  email: string;
+  role: "admin" | "user";
+  status: "active" | "inactive";
+}
+
 export default function AdminPanel() {
   const { isAdmin } = useAuth();
   const navigate = useNavigate();
@@ -42,6 +53,14 @@ export default function AdminPanel() {
   const [settings, setSettings] = useState(mockSettings);
   const [searchQuery, setSearchQuery] = useState("");
   const [userToDelete, setUserToDelete] = useState<string | null>(null);
+  const [showUserDialog, setShowUserDialog] = useState(false);
+  const [editingUser, setEditingUser] = useState<UserFormData | null>(null);
+  const [userFormData, setUserFormData] = useState<UserFormData>({
+    name: "",
+    email: "",
+    role: "user",
+    status: "active"
+  });
 
   // Redirect non-admin users
   React.useEffect(() => {
@@ -89,6 +108,70 @@ export default function AdminPanel() {
     });
   };
 
+  const handleEditUser = (user: any) => {
+    setEditingUser(user);
+    setUserFormData({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      status: user.status
+    });
+    setShowUserDialog(true);
+  };
+
+  const handleAddUser = () => {
+    setEditingUser(null);
+    setUserFormData({
+      name: "",
+      email: "",
+      role: "user",
+      status: "active"
+    });
+    setShowUserDialog(true);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setUserFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSelectChange = (name: string, value: string) => {
+    setUserFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmitUser = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (editingUser) {
+      // Update existing user
+      const updatedUsers = users.map(user => 
+        user.id === editingUser.id ? { ...user, ...userFormData } : user
+      );
+      setUsers(updatedUsers);
+      toast({
+        title: "User updated",
+        description: `${userFormData.name}'s information has been updated.`,
+        duration: 3000,
+      });
+    } else {
+      // Add new user
+      const newUser = {
+        ...userFormData,
+        id: `${users.length + 1}`,
+        lastLogin: "Never"
+      };
+      setUsers([...users, newUser]);
+      toast({
+        title: "User added",
+        description: `${userFormData.name} has been added to the system.`,
+        duration: 3000,
+      });
+    }
+    
+    setShowUserDialog(false);
+  };
+
   if (!isAdmin) {
     return null; // Prevent rendering if not admin
   }
@@ -133,7 +216,7 @@ export default function AdminPanel() {
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
                   </div>
-                  <Button>
+                  <Button onClick={handleAddUser}>
                     <Plus className="h-4 w-4 mr-2" />
                     Add User
                   </Button>
@@ -177,7 +260,7 @@ export default function AdminPanel() {
                             <TableCell>{user.lastLogin}</TableCell>
                             <TableCell className="text-right">
                               <div className="flex justify-end space-x-2">
-                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEditUser(user)}>
                                   <Pencil className="h-4 w-4" />
                                 </Button>
                                 <AlertDialog open={userToDelete === user.id} onOpenChange={(open) => !open && setUserToDelete(null)}>
@@ -282,6 +365,80 @@ export default function AdminPanel() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* User Add/Edit Dialog */}
+      <Dialog open={showUserDialog} onOpenChange={setShowUserDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingUser ? "Edit User" : "Add New User"}</DialogTitle>
+            <DialogDescription>
+              {editingUser 
+                ? "Update user information and permissions." 
+                : "Fill in the details to create a new user account."}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmitUser}>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Full Name</Label>
+                <Input 
+                  id="name" 
+                  name="name" 
+                  value={userFormData.name} 
+                  onChange={handleInputChange} 
+                  placeholder="Enter full name" 
+                  required 
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email Address</Label>
+                <Input 
+                  id="email" 
+                  name="email" 
+                  type="email" 
+                  value={userFormData.email} 
+                  onChange={handleInputChange} 
+                  placeholder="Enter email address" 
+                  required 
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="role">Role</Label>
+                <Select 
+                  value={userFormData.role} 
+                  onValueChange={(value) => handleSelectChange("role", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select user role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="user">User</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="status">Status</Label>
+                <Select 
+                  value={userFormData.status} 
+                  onValueChange={(value) => handleSelectChange("status", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select user status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="submit">{editingUser ? "Update User" : "Add User"}</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </MainLayout>
   );
 }
