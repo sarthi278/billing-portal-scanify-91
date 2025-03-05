@@ -143,7 +143,7 @@ const ProductList: React.FC = () => {
                     <TableCell>
                       <Badge variant="outline">{product.category}</Badge>
                     </TableCell>
-                    <TableCell>${product.price.toFixed(2)}</TableCell>
+                    <TableCell>₹{product.price.toFixed(2)}</TableCell>
                     <TableCell>
                       <Badge variant={product.stock > 10 ? "default" : (product.stock > 0 ? "secondary" : "destructive")}>
                         {product.stock > 0 ? 'In Stock' : 'Out of Stock'}

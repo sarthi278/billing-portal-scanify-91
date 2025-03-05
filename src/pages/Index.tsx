@@ -75,9 +75,9 @@ export default function Index() {
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center space-x-2 mb-8">
             <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-primary font-bold text-2xl">
-              S
+              A
             </div>
-            <h1 className="text-3xl font-bold">Scanify</h1>
+            <h1 className="text-3xl font-bold">Ayodhya SHG Management</h1>
           </div>
           
           <h2 className="text-4xl lg:text-5xl font-bold mb-6 tracking-tight leading-tight">

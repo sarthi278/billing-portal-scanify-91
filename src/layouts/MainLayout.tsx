@@ -91,9 +91,9 @@ export function AppSidebar() {
       <SidebarHeader className="p-4">
         <div className="flex items-center space-x-2">
           <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold text-xl">
-            S
+            A
           </div>
-          <span className="text-xl font-semibold">Scanify</span>
+          <span className="text-xl font-semibold">Ayodhya SHG Management</span>
         </div>
       </SidebarHeader>
       <SidebarContent>
